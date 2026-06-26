@@ -1,0 +1,66 @@
+services:
+  mysql_db:
+    image: mysql:8.0
+    container_name: mysql_ecuador
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ecuador_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ecuador_net
+
+  flask_app_1:
+    build: ./app
+    container_name: flask_servidor_1
+    restart: always
+    environment:
+      DB_HOST: mysql_db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: ecuador_db
+      SERVER_NAME: Servidor Flask 1
+    depends_on:
+      - mysql_db
+    networks:
+      - ecuador_net
+
+  flask_app_2:
+    build: ./app
+    container_name: flask_servidor_2
+    restart: always
+    environment:
+      DB_HOST: mysql_db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: ecuador_db
+      SERVER_NAME: Servidor Flask 2
+    depends_on:
+      - mysql_db
+    networks:
+      - ecuador_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_balanceador
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - flask_app_1
+      - flask_app_2
+    networks:
+      - ecuador_net
+
+volumes:
+  mysql_data:
+
+networks:
+  ecuador_net:
+    driver: bridge
