@@ -1,7 +1,14 @@
-CREATE DATABASE IF NOT EXISTS ecuador_db;
-USE ecuador_db;
+DROP DATABASE IF EXISTS ecuador_db;
 
-CREATE TABLE IF NOT EXISTS provincias (
+CREATE DATABASE ecuador_db
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE ecuador_db;
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
+CREATE TABLE provincias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     capital VARCHAR(100) NOT NULL,
@@ -9,7 +16,8 @@ CREATE TABLE IF NOT EXISTS provincias (
     poblacion_estimada INT NOT NULL,
     latitud DECIMAL(10,6) NOT NULL,
     longitud DECIMAL(10,6) NOT NULL
-);
+) CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
 
 INSERT INTO provincias (nombre, capital, area_km2, poblacion_estimada, latitud, longitud) VALUES
 ('Azuay', 'Cuenca', 8309.58, 881394, -2.900128, -79.005896),

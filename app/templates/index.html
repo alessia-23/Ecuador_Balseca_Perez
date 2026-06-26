@@ -4,90 +4,169 @@
     <meta charset="UTF-8">
     <title>Provincias del Ecuador</title>
 
-    <link rel="stylesheet"
-          href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
+<div class="app-shell">
 
-<header>
+    <aside class="sidebar">
 
-    <h1>Provincias del Ecuador</h1>
+        <header class="brand">
+            <div class="brand-icon">EC</div>
+            <div>
+                <h1>Provincias del Ecuador</h1>
+                <p>Aplicaciones Distribuidas</p>
+            </div>
+        </header>
 
-    <h3>{{ server_name }}</h3>
+        <section class="status-list">
+            <article class="status-card">
+                <div class="status-icon blue">▦</div>
+                <div>
+                    <span>Página servida por</span>
+                    <strong>{{ server_name }}</strong>
+                    <small><i></i> En línea</small>
+                </div>
+            </article>
 
-</header>
+            <article class="status-card">
+                <div class="status-icon green">☁</div>
+                <div>
+                    <span>API atendida por</span>
+                    <strong id="api-server">Cargando...</strong>
+                    <small><i></i> En línea</small>
+                </div>
+            </article>
 
-<div class="container">
+            <article class="status-card">
+                <div class="status-icon purple">◎</div>
+                <div>
+                    <span>Total de provincias</span>
+                    <strong id="total-provincias">0</strong>
+                    <small>Registros</small>
+                </div>
+            </article>
+        </section>
 
-    <div id="map"></div>
+        <section class="province-card">
+            <div class="section-title">
+                <span>Información provincial</span>
+            </div>
 
-    <div class="info">
+            <div id="datos" class="empty-state">
+                <span class="mini-label">Seleccione una provincia</span>
+                <h2>Mapa del Ecuador</h2>
+                <p>Haz clic en un marcador para consultar capital, área, población y coordenadas desde MySQL.</p>
+            </div>
+        </section>
 
-        <h2>Información</h2>
+        <footer class="team-card">
+            <div>
+                <span>Integrantes del equipo</span>
+                <strong>Alessia Pérez</strong>
+                <strong>Odalyz Balseca</strong>
+            </div>
+            <div class="heart">♥</div>
+        </footer>
 
-        <p>Seleccione un marcador del mapa.</p>
+    </aside>
 
-        <div id="datos"></div>
+    <main class="content">
+        <section class="topbar">
+            <div></div>
+            <div class="date-chip">📅 Proyecto Flask + Nginx + MySQL</div>
+        </section>
 
-    </div>
+        <section class="map-card">
+            <div id="map"></div>
+        </section>
+    </main>
 
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+const map = L.map('map', {
+    zoomControl: true
+}).setView([-1.83, -78.18], 7);
 
-const map = L.map('map').setView([-1.83,-78.18],7);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-
-    attribution:'© OpenStreetMap'
-
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
 }).addTo(map);
 
+function formatNumber(value) {
+    return Number(value).toLocaleString('es-EC');
+}
+
 fetch('/api/provincias')
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('api-server').textContent = data.servidor;
+        document.getElementById('total-provincias').textContent = data.total;
 
-.then(response=>response.json())
+        data.provincias.forEach(provincia => {
+            const marker = L.marker([
+                provincia.latitud,
+                provincia.longitud
+            ]).addTo(map);
 
-.then(data=>{
+            marker.bindPopup(`
+                <strong>${provincia.nombre}</strong><br>
+                ${provincia.capital}
+            `);
 
-    data.provincias.forEach(provincia=>{
+            marker.on('click', () => {
+                document.getElementById('datos').className = 'province-detail';
+                document.getElementById('datos').innerHTML = `
+                    <span class="mini-label">Provincia seleccionada</span>
+                    <h2>${provincia.nombre}</h2>
 
-        const marker=L.marker([
-            provincia.latitud,
-            provincia.longitud
-        ]).addTo(map);
+                    <div class="info-grid">
+                        <div>
+                            <span>Capital</span>
+                            <strong>${provincia.capital}</strong>
+                        </div>
 
-        marker.on('click',()=>{
+                        <div>
+                            <span>Área</span>
+                            <strong>${formatNumber(provincia.area_km2)} km²</strong>
+                        </div>
 
-            document.getElementById('datos').innerHTML=`
+                        <div>
+                            <span>Población</span>
+                            <strong>${formatNumber(provincia.poblacion_estimada)}</strong>
+                        </div>
 
-                <h3>${provincia.nombre}</h3>
+                        <div>
+                            <span>Latitud</span>
+                            <strong>${provincia.latitud}</strong>
+                        </div>
 
-                <p><strong>Capital:</strong> ${provincia.capital}</p>
+                        <div>
+                            <span>Longitud</span>
+                            <strong>${provincia.longitud}</strong>
+                        </div>
 
-                <p><strong>Área:</strong> ${provincia.area_km2} km²</p>
-
-                <p><strong>Población:</strong> ${provincia.poblacion_estimada}</p>
-
-                <hr>
-
-                <p><strong>Servidor:</strong> ${data.servidor}</p>
-
-            `;
-
+                        <div>
+                            <span>API atendida por</span>
+                            <strong class="server-name">${data.servidor}</strong>
+                        </div>
+                    </div>
+                `;
+            });
         });
-
+    })
+    .catch(error => {
+        document.getElementById('api-server').textContent = 'Error';
+        document.getElementById('datos').innerHTML = `
+            <h2>Error al cargar datos</h2>
+            <p>No se pudo consumir la API de provincias.</p>
+        `;
+        console.error(error);
     });
-
-});
-
 </script>
-
 </body>
-
 </html>

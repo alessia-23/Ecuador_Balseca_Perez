@@ -11,6 +11,7 @@ DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "root")
 DB_NAME = os.getenv("DB_NAME", "ecuador_db")
 SERVER_NAME = os.getenv("SERVER_NAME", "Servidor Flask")
+app.json.ensure_ascii = False
 
 
 def get_connection():
@@ -18,9 +19,11 @@ def get_connection():
         host=DB_HOST,
         user=DB_USER,
         password=DB_PASSWORD,
-        database=DB_NAME
+        database=DB_NAME,
+        charset="utf8mb4",
+        use_unicode=True,
+        auth_plugin="mysql_native_password"
     )
-
 
 def wait_for_database():
     retries = 20
